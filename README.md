@@ -77,14 +77,19 @@ and change the first line to match your peripheral, for example:
 ### Add your test file to test/user_peripherals
 
 * Copy the test in to a subdirectory of test/user_peripherals
-* Update your testbench.py to set the PERIPHERAL_NUM to match the slot used in peripherals.v.
+* Update your test.py to set the PERIPHERAL_NUM to match the slot used in peripherals.v.
 * In test/Makefile, add the name of your test to the list of user peripherals. If your test is test.py in the my_peripheral directory add this: `my_peripheral.test`
 
-To run your test, make sure you have installed the `requirements.txt`, then:
+To run your test locally, first make sure you have the submodules up to date and you've installed the python requirements:
+
+    git submodule update --init
+    pip install -r test/requirements.txt
+
+then to run your test, from the `test` directory:
 
     make -B my_peripheral.test
 
-And the compressed waveform will be in `sim_build/rtl/tb.fst`
+The compressed waveform will be in `sim_build/rtl/tb.fst`
 
 ### Add your docs to docs/user_peripherals
 
