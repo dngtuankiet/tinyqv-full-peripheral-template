@@ -5,6 +5,7 @@ input I2,
 output oEntropy
 );
 
+/* Implementation of XOR-latch cell */
 // wire xor_top;
 // wire xor_bottom;
 // wire and_top;
@@ -16,9 +17,11 @@ output oEntropy
 // assign and_bottom = T & xor_bottom;
 
 // assign oEntropy = and_top;
+/* ----------------------------------*/
 
 
-// Use this code to run the test.py
+
+/* Use the code below to run the test.py */
 wire iEn = T & I1 & ~I2; // Enable signal for the entropy cell
 assign oEntropy = (iEn)? 1'b1 : 1'b0; // Output is high when enabled
 
