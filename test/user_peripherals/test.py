@@ -33,7 +33,8 @@ async def test_project(dut):
     I1_REG = 0x3
     I2_REG = 0x4
     TRIGGER_REG = 0x5
-    RANDOM_NUMBER_REG = 0x6
+    CLK_DIVISION_REG = 0x6
+    RANDOM_NUMBER_REG = 0x7
 
     # Control register bits
     RESET = 0x1 << 0
@@ -51,7 +52,7 @@ async def test_project(dut):
     dut._log.info("----------------------------------")
     dut._log.info("Step 1: Reset TRNG peripheral")
     await tqv.write_word_reg(CONTROL_REG, RESET)
-    await ClockCycles(dut.clk, 10) # Reset the TRNG for 10 clock cycles
+    await ClockCycles(dut.clk, 1000) # Reset the TRNG for 1000 clock cycles
     await tqv.write_word_reg(CONTROL_REG, 0x0)
     
     control_reg = await tqv.read_word_reg(CONTROL_REG)
@@ -99,7 +100,7 @@ async def test_project(dut):
     # Wait for ready signal to be asserted
     while (await tqv.read_word_reg(STATUS_REG) & READY) == 0:
         status_reg = await tqv.read_word_reg(STATUS_REG)
-        dut._log.info(f"TRNG status during calibration: {status_reg:#x}")
+        # dut._log.info(f"TRNG status during calibration: {status_reg:#x}")
         await ClockCycles(dut.clk, 1)
         timeout -= 1
         if timeout <= 0:

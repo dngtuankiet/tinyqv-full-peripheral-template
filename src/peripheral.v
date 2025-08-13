@@ -38,6 +38,7 @@ module trng_kietdang_spi (
     reg [31:0] r_data_addr_3; // I1 REGISTER
     reg [31:0] r_data_addr_4; // I2 REGISTER
     reg [31:0] r_data_addr_5; // TRIGGER REGISTER
+    reg [31:0] r_data_addr_6; // CLK DIVISION REGISTER
 
 
     // Instantiate the dual_trng module
@@ -46,6 +47,7 @@ module trng_kietdang_spi (
     dual_trng trng_inst (
         .iClk(clk),
         .iRst(~rst_n | r_data_addr_0[0]),     // Reset if rst_n is low or RST bit is set
+        .iClk_div_factor(r_data_addr_6),       // Clock division factor
         .iCalib(r_data_addr_0[2]),            // Calibration control
         .iCalib_cycles(r_data_addr_2),        // Calibration cycles
         .iTrigger(r_data_addr_5[23:0]),       // Trigger input
@@ -67,6 +69,7 @@ module trng_kietdang_spi (
             r_data_addr_3 <= 0;
             r_data_addr_4 <= 0;
             r_data_addr_5 <= 0;
+            r_data_addr_6 <= 1; // Default clock division factor
         end else begin
             if (address == 6'h0) begin
                 if (data_write_n != 2'b11)              r_data_addr_0[7:0]   <= data_in[7:0];
@@ -98,6 +101,11 @@ module trng_kietdang_spi (
                 if (data_write_n[1] != data_write_n[0]) r_data_addr_5[15:8]  <= data_in[15:8];
                 if (data_write_n == 2'b10)              r_data_addr_5[31:16] <= data_in[31:16];
             end
+            if (address == 6'h6) begin
+                if (data_write_n != 2'b11)              r_data_addr_6[7:0]   <= data_in[7:0];
+                if (data_write_n[1] != data_write_n[0]) r_data_addr_6[15:8]  <= data_in[15:8];
+                if (data_write_n == 2'b10)              r_data_addr_6[31:16] <= data_in[31:16];
+            end
         end
     end
 
@@ -113,7 +121,8 @@ module trng_kietdang_spi (
                     (address == 6'h3) ? r_data_addr_3 :
                     (address == 6'h4) ? r_data_addr_4 :
                     (address == 6'h5) ? r_data_addr_5 :
-                    (address == 6'h6) ? random_number :
+                    (address == 6'h6) ? r_data_addr_6 :
+                    (address == 6'h7) ? random_number :
                     32'h0;
 
     // All reads complete in 1 clock

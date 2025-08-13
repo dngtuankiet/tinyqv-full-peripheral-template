@@ -32,7 +32,7 @@ The XOR-latch cell (in yellow box) consists of 2 XOR gates and 2 AND gates. Thre
 
 The functionality of the ring generator is very similar to a **Linear Feedback Shift Register (LFSR)**. It is characterized by a polynomial, which determines the length of the ring generator and its feedback path. Initialized with a seed, the internal state of the ring generator iterates through a deterministic sequence—**like an LFSR, this can be used as a Pseudo-Random Number Generator (PRNG)**. For an $n$-state ring generator, the possible maximum-sequence length ($2^n-1$ states) depends on the chosen polynomial. The polynomials that enable the maximum-sequence are called primitive polynomials (for more details see [4]).
 
-The TRNG main idea is to exploit the sampled jitter edges from the XOR-latch cell to break the deterministic behavior of ring generator. Based on this idea, the major design decisions will be:
+The TRNG main idea is to exploit the sampled jitter edges from the XOR-latch cell to break the deterministic behavior of the ring generator. Based on this idea, the major design decisions will be:
 
 - What is the sufficient length of the ring generator?
 - How many entropy cell should be injected to the ring generator?
@@ -70,7 +70,8 @@ The TRNG peripheral uses a 6-address register map for configuration and data acc
 | 0x03    | I1_REG                 | R/W    | Input I1 for entropy cells (bits 23:0 used)                       |
 | 0x04    | I2_REG                 | R/W    | Input I2 for entropy cells (bits 23:0 used)                       |
 | 0x05    | TRIGGER_REG            | R/W    | Trigger oscillator inputs for entropy cells (bits 23:0 used)      |
-| 0x06    | RANDOM_NUMBER_REG      | R      | 32-bit random number output (read-only)                           |
+| 0x06    | CLK DIVISION REGISTER  | R/W    | Clock division register (default 1)                               |
+| 0x07    | RANDOM_NUMBER_REG      | R      | 32-bit random number output (read-only)                           |
 
 ### Control Register (0x00) Bit Fields:
 | Bit | Name     | Access | Description                                    |
