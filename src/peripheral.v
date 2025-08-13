@@ -32,7 +32,7 @@ module trng_kietdang_spi (
 );
 
     // Implement a 32-bit read/write register at address 0
-    reg [31:0] r_data_addr_0; // CONTROL REGISTER[3:0] -> READ[3] | CALIB[2] | SEL_BASE[1] | RST[0]
+    reg [31:0] r_data_addr_0; // CONTROL REGISTER[3:0] -> READ[4] | CALIB[3] | SEL_BASE[2] | EN[1] | RST[0]
     reg [31:0] r_data_addr_1; // STATUS REGISTER
     reg [31:0] r_data_addr_2; // CALIBRATION CYCLES REGISTER
     reg [31:0] r_data_addr_3; // I1 REGISTER
@@ -47,14 +47,15 @@ module trng_kietdang_spi (
     dual_trng trng_inst (
         .iClk(clk),
         .iRst(~rst_n | r_data_addr_0[0]),     // Reset if rst_n is low or RST bit is set
+        .iEn(r_data_addr_0[1]),               // Enable controlled by EN bit
         .iClk_div_factor(r_data_addr_6),       // Clock division factor
-        .iCalib(r_data_addr_0[2]),            // Calibration control
+        .iCalib(r_data_addr_0[3]),            // Calibration control
         .iCalib_cycles(r_data_addr_2),        // Calibration cycles
         .iTrigger(r_data_addr_5[23:0]),       // Trigger input
         .iI1(r_data_addr_3[23:0]),            // I1 input
         .iI2(r_data_addr_4[23:0]),            // I2 input
-        .iSel_base(r_data_addr_0[1]),         // Select long base (0 for long, 1 for short)
-        .iRead(r_data_addr_0[3]),             // Read request
+        .iSel_base(r_data_addr_0[2]),         // Select long base (0 for long, 1 for short)
+        .iRead(r_data_addr_0[4]),             // Read request
         .oReady(ready_signal),                // Ready signal
         .oRandom(random_number)               // Random number output
     );

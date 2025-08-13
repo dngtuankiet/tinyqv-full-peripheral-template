@@ -33,14 +33,15 @@ async def test_project(dut):
     I1_REG = 0x3
     I2_REG = 0x4
     TRIGGER_REG = 0x5
-    CLK_DIVISION_REG = 0x6
+    CLK_DIVISION_REG = 0x6 #TinyQV runs at 64MHz, it is nice to have a clock divider to run at lower frequencies
     RANDOM_NUMBER_REG = 0x7
 
     # Control register bits
     RESET = 0x1 << 0
-    SEL_BASE_SHORT = 0x1 << 1
-    CALIBRATION = 0x1 << 2
-    READ_REQUEST = 0x1 << 3
+    CORE_ENABLE = 0x1 << 1
+    SEL_BASE_SHORT = 0x1 << 2
+    CALIBRATION = 0x1 << 3
+    READ_REQUEST = 0x1 << 4
     READY = 0x1 << 0
 
     # Parameters for the TRNG peripheral
@@ -51,9 +52,10 @@ async def test_project(dut):
     #=== Step 1: Reset TRNG peripheral ===#
     dut._log.info("----------------------------------")
     dut._log.info("Step 1: Reset TRNG peripheral")
-    await tqv.write_word_reg(CONTROL_REG, RESET)
+    await tqv.write_word_reg(CONTROL_REG, RESET | CORE_ENABLE) # Reset and enable the TRNG peripheral
     await ClockCycles(dut.clk, 1000) # Reset the TRNG for 1000 clock cycles
-    await tqv.write_word_reg(CONTROL_REG, 0x0)
+    await tqv.write_word_reg(CONTROL_REG, CORE_ENABLE)
+    await tqv.write_word_reg(CLK_DIVISION_REG, 0x10) # Set clock division factor to 16 
     
     control_reg = await tqv.read_word_reg(CONTROL_REG)
     dut._log.info(f"TRNG control register after reset: {control_reg:#x}")

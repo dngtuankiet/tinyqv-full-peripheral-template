@@ -14,6 +14,7 @@
 module dual_trng(
   input  wire        iClk,
   input  wire        iRst,
+  input  wire        iEn,
   // Clock division option
   input  wire [31:0] iClk_div_factor, // Adjust this value to set the clock division factor
 
@@ -61,8 +62,6 @@ module dual_trng(
   reg  [31:0] shift_reg;
   reg         selected_base;          // latched when calibration starts
 
-
-
   // --------------------------
   // Internal clock domain
   // --------------------------
@@ -70,10 +69,9 @@ module dual_trng(
   // An option to reduce the clock frequency for the ring generators
   reg [31:0] r_counter;
   reg clk_div;
-  // parameter [31:0] CONSTANTNUMBER = 32'd10; // Adjust this value to set the clock division factor
   
   always @(posedge iClk) begin
-    if (iRst) begin
+    if (iRst || !iEn) begin
       r_counter <= 32'd0;
       clk_div <= 1'b0;
     end else if (r_counter == iClk_div_factor - 1) begin
@@ -93,25 +91,25 @@ module dual_trng(
   wire rst_internal;
   
   always @(posedge clk_div or posedge iRst) begin
-    if (iRst) begin
+    if (iRst || !iEn) begin
       rst_sync <= 2'b11;
     end else begin
       rst_sync <= {rst_sync[0], 1'b0};
     end
   end
-  assign rst_internal = rst_sync[1];
+  assign rst_internal = rst_sync[1] || !iEn;
 
   // Control signal synchronizers
   reg [1:0] calib_sync, read_sync;
   wire w_calib_internal, w_read_internal;
   
   always @(posedge clk_div or posedge iRst) begin
-    if (iRst) begin
+    if (iRst || !iEn) begin
       calib_sync <= 2'b00;
       read_sync <= 2'b00;
     end else begin
-      calib_sync <= {calib_sync[0], iCalib};
-      read_sync <= {read_sync[0], iRead};
+      calib_sync <= {calib_sync[0], iCalib & iEn};
+      read_sync <= {read_sync[0], iRead & iEn};
     end
   end
   
@@ -262,7 +260,7 @@ module dual_trng(
     endcase
   end
 
-  assign oRandom = r_random_number;
-  assign oReady  = r_ready;
+  assign oRandom = iEn ? r_random_number : 32'h0;
+  assign oReady  = iEn ? r_ready : 1'b0;
 
 endmodule
