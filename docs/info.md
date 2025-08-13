@@ -1,27 +1,62 @@
 <!---
 
 This file is used to generate your project datasheet. Please fill in the information below and delete any unused
-sections.
+sec## References
 
 You can also include images in this folder and reference them in the markdown. Each image must be less than
 512 kb in size, and the combined size of all images must be less than 1 MB.
 -->
+# True Random Number Generator (TRNG)
+Author: Tuan-Kiet Dang
 
 ## What it does
 
-This submission introduces a **True Random Number Generator (TRNG)** peripheral designed to generate random numbers using ring oscillator-based entropy sources. While the design aims to provide high-quality randomness, comprehensive evaluation should be performed on silicon to confirm its effectiveness.
+This submission introduces a **True Random Number Generator (TRNG)** peripheral designed to harness jitter-based entropy sources from oscillators. 
+While the design aims to provide high-quality randomness, comprehensive evaluation should be performed on silicon to confirm its effectiveness. This design has been implemented on FPGA and 180nm standard CMOS process [1][2][3]; however, as TRNG performance depends on the fabrication process, further testing on another process node is desirable.
 
-A detailed PDF document is included, describing the peripheral’s architecture and operation. The TRNG has been implemented on FPGA and fabricated on a different process node; however, as TRNG performance depends on the fabrication process, further testing on the target process is recommended.
+The general architecture of the TRNG comprises of two main components: (1) XOR-latch entropy source and (2) ring generator. The main idea is applying the ring generator as an obfuscation layer in addition to sampled jitter edges to generate randomness.
 
-Key features include two selectable ring generator bases (long 32-bit and short 16-bit polynomials), configurable calibration, and a straightforward memory-mapped interface for integration with the TinyQV core. Only one ring generator is active during operation—the dual options allow for comparative evaluation of entropy quality. More information is available in the included PDF located in the `/docs` directory.
+### 1. XOR-latch Entropy Source
+
+<p align="center">
+    <img src="./XOR-latch_cell.png" alt="XOR-latch entropy cell" width="550"/>
+</p>
+
+The XOR-latch cell (in yellow box) consists of 2 XOR gates and 2 AND gates. Three input signals (I1, I2, T) are used to control the operation of the cell. Its output is sampled by the obfuscation layer. The trigger sequence to enable the entropy cell to oscillate is as followed:
+
+- At the REST state, I1 = I2 = T = L (or logic 0)
+- At the ARM state, I1 = H, I2 = L (actually I1 and I2 are asserted with opposite level)
+- To TRIGGER the oscillation, assert T = H
+
+### 2. Ring Generator
+
+The functionality of the ring generator is very similar to a **Linear Feedback Shift Register (LFSR)**. It is characterized by a polynomial, which determines the length of the ring generator and its feedback path. Initialized with a seed, the internal state of the ring generator iterates through a deterministic sequence—**like an LFSR, this can be used as a Pseudo-Random Number Generator (PRNG)**. For an $n$-state ring generator, the possible maximum-sequence length ($2^n-1$ states) depends on the chosen polynomial. The polynomials that enable the maximum-sequence are called primitive polynomials (for more details see [4]).
+
+The TRNG main idea is to exploit the sampled jitter edges from the XOR-latch cell to break the deterministic behavior of ring generator. Based on this idea, the major design decisions will be:
+
+- What is the sufficient length of the ring generator?
+- How many entropy cell should be injected to the ring generator?
+
+### 3. General design:
+
+<p align="center">
+    <img src="./16-state-rg.png" alt="16-state-rg" width="650"/>
+</p>
+
+The above figure describe an example of a 16-state ring generator and eight entropy cells. The ring generator features the polynomial $x^{16}+x^{10}+x^7+x^4+1$. For longer ring generator, more entropy cells can be injected wherever there is a possible positions without disrupting the feedback path. From my experience with previous designs, not all entropy cells are required to be triggered, some of them are enabled for the 16-state ring generator and only one is sufficient for a 32-state ring generator to achieve high quality randomness.
+
+This submission aims to test two ring generator with different length (32-state and 16-state), with a total of 24 entropy cells. The first eight cells are shared for both ring generators. Only one ring generator is active in the operation, and the entropy cells can be individually triggered by the memory-mapped interface.
+
 
 ### Key Features:
-- **Dual Ring Generators**: Selectable between long (32-bit polynomial) and short (16-bit polynomial) ring generators
+- **Dual Ring Generators**: Selectable between long (32-state polynomial) and short (16-state polynomial) ring generators
 - **24 Entropy Cells**: Each generates entropy from ring oscillator jitter
 - **Calibration Mode**: Configurable calibration cycles to stabilize the entropy sources
 - **32-bit Random Output**: Serial collection of 32 random bits per read operation
-- **Memory-Mapped Interface**: Simple register-based control and data access
-- **Ready/Valid Handshaking**: Clear indication when random numbers are available
+
+### Testing Notes:
+- It seems like the entropy cell can not be simulated with the python script (test.py).
+- It is possible to test the functionality of other logic by uncomment the test code in entropy_cell.v and comment the actual implementation of the entropy cell.
 
 ## Register Map
 
@@ -90,9 +125,12 @@ Trigger entropy cells:
 5. Repeat steps 2-4 for additional random numbers
 ```
 
-### Recommended Test Setup:
-- No external hardware required for basic operation
-- Optional: Connect oscilloscope to monitor UO_OUT for debugging
-- Optional: External entropy sources for enhanced randomness testing
+## References
 
-The peripheral is fully self-contained and generates entropy from internal silicon process variations and thermal noise in the ring oscillators.
+[1] Tuan-Kiet Dang, *et al.*, "A True Random Number Generator on FPGA with Jitter-Sampling by Ring Generator," in *2024 Asian Hardware Oriented Security and Trust Symposium (AsianHOST)*, Kobe, Japan, 2024, pp. 1-6, doi: [10.1109/AsianHOST63913.2024.10838391](https://doi.org/10.1109/AsianHOST63913.2024.10838391).
+
+[2] Tuan-Kiet Dang, *et al.*, "Dual-Mode PUF and TRNG Design with Ring Generator on 180nm CMOS," in *2025 International Conference on IC Design and Technology (ICICDT)*, Lecce, Italy, 2025, pp. 41-44, doi: [10.1109/ICICDT65192.2025.11078127](https://doi.org/10.1109/ICICDT65192.2025.11078127).
+
+[3] Tuan-Kiet Dang, *et al.*, "A Unified Approach to Strong PUF and TRNG Using Ring Generator for Cryptography," *IEEE Internet of Things Journal*, doi: [10.1109/JIOT.2025.3582869](https://doi.org/10.1109/JIOT.2025.3582869).
+
+[4] J. Rajski and J. Tyszer, "Primitive Polynomials Over GF(2) of Degree up to 660 with Uniformly Distributed Coefficients," *Journal of Electronic Testing*, vol. 19, no. 6, pp. 645–657, Dec. 2003, doi: [10.1023/A:1025937128748](https://doi.org/10.1023/A:1025937128748).
