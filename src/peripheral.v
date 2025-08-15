@@ -130,24 +130,25 @@ module trng_kietdang_spi (
     assign data_ready = 1;
     
     // User interrupt is generated on rising edge of ui_in[6], and cleared by writing a 1 to the low bit of address 8.
-    reg example_interrupt;
-    reg last_ui_in_6;
+    // reg example_interrupt;
+    // reg last_ui_in_6;
 
-    always @(posedge clk) begin
-        if (!rst_n) begin
-            example_interrupt <= 0;
-        end
+    // always @(posedge clk) begin
+    //     if (!rst_n) begin
+    //         example_interrupt <= 0;
+    //     end
 
-        if (ui_in[6] && !last_ui_in_6) begin
-            example_interrupt <= 1;
-        end else if (address == 6'h8 && data_write_n != 2'b11 && data_in[0]) begin
-            example_interrupt <= 0;
-        end
+    //     if (ui_in[6] && !last_ui_in_6) begin
+    //         example_interrupt <= 1;
+    //     end else if (address == 6'h8 && data_write_n != 2'b11 && data_in[0]) begin
+    //         example_interrupt <= 0;
+    //     end
 
-        last_ui_in_6 <= ui_in[6];
-    end
+    //     last_ui_in_6 <= ui_in[6];
+    // end
 
-    assign user_interrupt = example_interrupt;
+    // assign user_interrupt = example_interrupt;
+    assign user_interrupt = 1'b0; // Disable user interrupt for now, as this design does not use it.
 
     // List all unused inputs to prevent warnings
     // data_read_n is unused as none of our behaviour depends on whether
