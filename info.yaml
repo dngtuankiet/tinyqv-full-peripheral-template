@@ -24,6 +24,10 @@ project:
     - "spi/reclocking.sv"
     - "spi/spi_reg.sv"
     - "spi/synchronizer.sv"
+    - "user_peripherals/trng/dual_trng.v"
+    - "user_peripherals/trng/entropy_cell.v"
+    - "user_peripherals/trng/rg_base_long.v"
+    - "user_peripherals/trng/rg_base_short.v"
 
 
 # The pinout of your project. Leave unused pins blank. DO NOT delete or add any pins.
