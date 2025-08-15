@@ -22,10 +22,10 @@ The general architecture of the TRNG comprises of two main components: (1) XOR-l
     <img src="./XOR-latch_cell.png" alt="XOR-latch entropy cell" width="550"/>
 </p>
 
-The XOR-latch cell (in yellow box) consists of 2 XOR gates and 2 AND gates. Three input signals (I1, I2, T) are used to control the operation of the cell. Its output is sampled by the obfuscation layer. The trigger sequence to enable the entropy cell to oscillate is as followed:
+The XOR-latch cell (in yellow box) consists of 2 XOR gates and 2 AND gates. Three input signals (I1, I2, T) are used to control the operation of the cell. Its output is sampled by the obfuscation layer. The trigger sequence to enable the entropy cell to oscillate is as followed, (L is logic-0, H is logic-1):
 
-- At the REST state, I1 = I2 = T = L (or logic 0)
-- At the ARM state, I1 = H, I2 = L (actually I1 and I2 are asserted with opposite level)
+- At the REST state, I1 = I2 = T = L
+- At the ARM state, I1 = H, I2 = L (or vice-versa I1 = L, I2 = H)
 - To TRIGGER the oscillation, assert T = H
 
 ### 2. Ring Generator
@@ -56,7 +56,8 @@ This submission aims to test two ring generator with different length (32-state 
 
 ### Testing Notes:
 - It seems like the entropy cell can not be simulated with the python script (test.py).
-- It is possible to test the functionality of other logic by uncomment the test code in entropy_cell.v and comment the actual implementation of the entropy cell.
+- However, it is possible to test the functionality of other logic by forcing the entropy.cell to output a dummy logic-1.
+- How-to-do: uncomment the test code in entropy_cell.v and comment the actual implementation of the entropy cell.
 
 ## Register Map
 
@@ -76,17 +77,18 @@ The TRNG peripheral uses a 6-address register map for configuration and data acc
 ### Control Register (0x00) Bit Fields:
 | Bit | Name     | Access | Description                                    |
 |-----|----------|--------|------------------------------------------------|
-| 0   | RST      | R/W    | Software reset (1 = reset TRNG core)          |
-| 1   | SEL_BASE | R/W    | Ring generator selection (0 = long, 1 = short)|
-| 2   | CALIB    | R/W    | Calibration enable (1 = start calibration)    |
-| 3   | READ     | R/W    | Read request (1 = request new random number)  |
-| 31:4| Reserved | R/W    | Unused                       |
+| 0   | RST      | R/W    | Software reset (1 = reset TRNG core)           |
+| 1   | EN       | R/W    | Core enable (1 = enable TRNG core)             |
+| 2   | SEL_BASE | R/W    | Ring generator selection (0 = long, 1 = short) |
+| 3   | CALIB    | R/W    | Calibration enable (1 = start calibration)     |
+| 4   | READ     | R/W    | Read request (1 = request new random number)   |
+| 31:5| Reserved | R/W    | Unused                       |
 
 ### Status Register (0x01) Bit Fields:
 | Bit | Name     | Access | Description                                    |
 |-----|----------|--------|------------------------------------------------|
-| 0   | READY    | R      | Ready status (1 = random number ready to read)|
-| 31:1| Reserved | R/W    | Unused                       |
+| 0   | READY    | R      | Ready status (1 = random number ready to read) |
+| 31:1| Reserved | R/W    | Unused                                         |
 
 ## Operation Sequence
 
@@ -94,8 +96,10 @@ The TRNG peripheral uses a 6-address register map for configuration and data acc
 The core can be reset by software with the first bit of the CONTROL_REG
 
 ```
-1. Write CONTROL_REG[0] = 1 to reset the TRNG core
-2. Write CONTROL_REG[0] = 0 to release reset
+1. Write CONTROL_REG[0] = 0x3 to enable & reset the TRNG core
+2. Write CONTROL_REG[0] = 0x2 to release reset
+3. [Optional] Configure the clock divider to allow the TRNG core run at lower frequency
+    - Write to CLK_DIVISION_REG with [divisor] value (default 1)
 ```
 
 ### 2. Entropy Trigger & Ring Generator Selection
