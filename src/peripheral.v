@@ -62,7 +62,6 @@ module trng_kietdang (
     always @(posedge clk) begin
         if (!rst_n) begin
             r_data_addr_0 <= 0;
-            r_data_addr_1 <= 0;
             r_data_addr_2 <= 0;
             r_data_addr_3 <= 0;
             r_data_addr_4 <= 0;
@@ -73,11 +72,6 @@ module trng_kietdang (
                 if (data_write_n != 2'b11)              r_data_addr_0[7:0]   <= data_in[7:0];
                 if (data_write_n[1] != data_write_n[0]) r_data_addr_0[15:8]  <= data_in[15:8];
                 if (data_write_n == 2'b10)              r_data_addr_0[31:16] <= data_in[31:16];
-            end
-            if (address == 6'h1) begin
-                if (data_write_n != 2'b11)              r_data_addr_1[7:0]   <= data_in[7:0];
-                if (data_write_n[1] != data_write_n[0]) r_data_addr_1[15:8]  <= data_in[15:8];
-                if (data_write_n == 2'b10)              r_data_addr_1[31:16] <= data_in[31:16];
             end
             if (address == 6'h2) begin
                 if (data_write_n != 2'b11)              r_data_addr_2[7:0]   <= data_in[7:0];
@@ -117,7 +111,7 @@ module trng_kietdang (
     // Address 4 reads ui_in
     // All other addresses read 0.
     assign data_out = (address == 6'h0) ? r_data_addr_0 :
-                    (address == 6'h1) ? {r_data_addr_1[31:1], ready_signal} :
+                    (address == 6'h1) ? {31'h0, ready_signal} :
                     (address == 6'h2) ? r_data_addr_2 :
                     (address == 6'h3) ? r_data_addr_3 :
                     (address == 6'h4) ? r_data_addr_4 :
