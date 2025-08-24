@@ -15,8 +15,8 @@ module dual_trng(
   input  wire        iClk,
   input  wire        iRst,
   input  wire        iEn,
-  // Clock division option
-  input  wire [31:0] iClk_div_factor, // Adjust this value to set the clock division factor
+  // // Clock division option
+  // input  wire [31:0] iClk_div_factor, // Adjust this value to set the clock division factor
 
   // Calibration control
   input  wire        iCalib,          // start calibration for selected base
@@ -67,58 +67,58 @@ module dual_trng(
   // --------------------------
 
   // An option to reduce the clock frequency for the ring generators
-  reg [31:0] r_counter;
-  reg clk_div;
+  // reg [31:0] r_counter;
+  // reg clk_div;
   
-  always @(posedge iClk) begin
-    if (iRst || !iEn) begin
-      r_counter <= 32'd0;
-      clk_div <= 1'b0;
-    end else if (r_counter == iClk_div_factor - 1) begin
-      r_counter <= 32'd0;
-      clk_div <= ~clk_div;
-    end else begin
-      r_counter <= r_counter + 32'd1;
-    end
-  end
+  // always @(posedge iClk) begin
+  //   if (iRst || !iEn) begin
+  //     r_counter <= 32'd0;
+  //     clk_div <= 1'b0;
+  //   end else if (r_counter == iClk_div_factor - 1) begin
+  //     r_counter <= 32'd0;
+  //     clk_div <= ~clk_div;
+  //   end else begin
+  //     r_counter <= r_counter + 32'd1;
+  //   end
+  // end
 
   // --------------------------
   // Clock domain crossing synchronizers
   // --------------------------
   
-  // Reset synchronizer to clk_div domain
-  reg [1:0] rst_sync;
-  wire rst_internal;
+  // // Reset synchronizer to clk_div domain
+  // reg [1:0] rst_sync;
+  // wire rst_internal;
   
-  always @(posedge clk_div or posedge iRst) begin
-    if (iRst || !iEn) begin
-      rst_sync <= 2'b11;
-    end else begin
-      rst_sync <= {rst_sync[0], 1'b0};
-    end
-  end
-  assign rst_internal = rst_sync[1] || !iEn;
+  // always @(posedge clk_div or posedge iRst) begin
+  //   if (iRst || !iEn) begin
+  //     rst_sync <= 2'b11;
+  //   end else begin
+  //     rst_sync <= {rst_sync[0], 1'b0};
+  //   end
+  // end
+  // assign rst_internal = rst_sync[1] || !iEn;
 
-  // Control signal synchronizers
-  reg [1:0] calib_sync, read_sync;
-  wire w_calib_internal, w_read_internal;
+  // // Control signal synchronizers
+  // reg [1:0] calib_sync, read_sync;
+  // wire w_calib_internal, w_read_internal;
   
-  always @(posedge clk_div or posedge iRst) begin
-    if (iRst || !iEn) begin
-      calib_sync <= 2'b00;
-      read_sync <= 2'b00;
-    end else begin
-      calib_sync <= {calib_sync[0], iCalib & iEn};
-      read_sync <= {read_sync[0], iRead & iEn};
-    end
-  end
+  // always @(posedge clk_div or posedge iRst) begin
+  //   if (iRst || !iEn) begin
+  //     calib_sync <= 2'b00;
+  //     read_sync <= 2'b00;
+  //   end else begin
+  //     calib_sync <= {calib_sync[0], iCalib & iEn};
+  //     read_sync <= {read_sync[0], iRead & iEn};
+  //   end
+  // end
   
-  assign w_calib_internal = calib_sync[1];
-  assign w_read_internal = read_sync[1];
+  // assign w_calib_internal = calib_sync[1];
+  // assign w_read_internal = read_sync[1];
 
   // Edge detection for iRead
   reg r_read_prev;
-  wire w_iRead_rise = w_read_internal & ~r_read_prev;
+  wire w_iRead_rise = iRead & ~r_read_prev;
 
   // --------------------------
   // Entropy fabric (24 cells)
@@ -139,16 +139,16 @@ module dual_trng(
   // Ring generators
   // --------------------------
   rg_base_long u_rg_long (
-    .iClk(clk_div),
-    .iRst(rst_internal),
+    .iClk(iClk),
+    .iRst(iRst),
     .iEn (en_rg_long),
     .iEntropy(w_entropy[23:0]),
     .oSerial(w_oSerial_long)
   );
 
   rg_base_short u_rg_short (
-    .iClk(clk_div),
-    .iRst(rst_internal),
+    .iClk(iClk),
+    .iRst(iRst),
     .iEn (en_rg_short),
     .iEntropy(w_entropy[7:0]),
     .oSerial(w_oSerial_short)
@@ -157,8 +157,8 @@ module dual_trng(
   // --------------------------
   // Sequential: state & datapath
   // --------------------------
-  always @(posedge clk_div) begin
-    if (rst_internal) begin
+  always @(posedge iClk) begin
+    if (iRst) begin
       state           <= S_IDLE;
       calib_counter   <= 32'd0;
       bit_counter     <= 6'd0;
@@ -168,10 +168,10 @@ module dual_trng(
       r_read_prev     <= 1'b0;
     end else begin
       state <= next_state;
-      r_read_prev <= w_read_internal;
+      r_read_prev <= iRead;
 
       // Latch base selection at the moment calibration begins
-      if (state == S_IDLE && w_calib_internal) begin
+      if (state == S_IDLE && iCalib) begin
         selected_base <= iSel_base;
       end
 
@@ -202,7 +202,7 @@ module dual_trng(
     next_state = state;
     case (state)
       S_IDLE: begin
-        if (w_calib_internal) next_state = S_CALIB;
+        if (iCalib) next_state = S_CALIB;
       end
 
       S_CALIB: begin

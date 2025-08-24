@@ -47,7 +47,7 @@ module trng_kietdang (
         .iClk(clk),
         .iRst(~rst_n | r_data_addr_0[0]),     // Reset if rst_n is low or RST bit is set
         .iEn(r_data_addr_0[1]),               // Enable controlled by EN bit
-        .iClk_div_factor(r_data_addr_6),       // Clock division factor
+        // .iClk_div_factor(r_data_addr_6),       // Clock division factor
         .iCalib(r_data_addr_0[3]),            // Calibration control
         .iCalib_cycles(r_data_addr_2),        // Calibration cycles
         .iTrigger(r_data_addr_5[23:0]),       // Trigger input
