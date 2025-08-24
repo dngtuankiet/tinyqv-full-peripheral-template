@@ -25,7 +25,7 @@ project:
     - "test_harness/spi_reg.sv"
     - "test_harness/synchronizer.sv"
     - "user_peripherals/trng/dual_trng.v"
-    - "user_peripherals/trng/entropy_cell_attribute.v"
+    - "user_peripherals/trng/entropy_cell.v"
     - "user_peripherals/trng/rg_base_long.v"
     - "user_peripherals/trng/rg_base_short.v"
 

@@ -9,15 +9,13 @@
 //        - enable selected base
 //        - shift 32 serial bits into a word
 //        - latch to oRandom, oReady=1
-// Ring bases are enabled ONLY during CALIBRATION or COLLECTING.
+// ONLY 1 ring generator is enabled during CALIBRATION or COLLECTING.
 // -----------------------------------------------------------------------------
 module dual_trng(
   input  wire        iClk,
   input  wire        iRst,
   input  wire        iEn,
-  // // Clock division option
-  // input  wire [31:0] iClk_div_factor, // Adjust this value to set the clock division factor
-
+  
   // Calibration control
   input  wire        iCalib,          // start calibration for selected base
   input  wire [31:0] iCalib_cycles,   // how many clocks to keep the base enabled
@@ -62,59 +60,6 @@ module dual_trng(
   reg  [31:0] shift_reg;
   reg         selected_base;          // latched when calibration starts
 
-  // --------------------------
-  // Internal clock domain
-  // --------------------------
-
-  // An option to reduce the clock frequency for the ring generators
-  // reg [31:0] r_counter;
-  // reg clk_div;
-  
-  // always @(posedge iClk) begin
-  //   if (iRst || !iEn) begin
-  //     r_counter <= 32'd0;
-  //     clk_div <= 1'b0;
-  //   end else if (r_counter == iClk_div_factor - 1) begin
-  //     r_counter <= 32'd0;
-  //     clk_div <= ~clk_div;
-  //   end else begin
-  //     r_counter <= r_counter + 32'd1;
-  //   end
-  // end
-
-  // --------------------------
-  // Clock domain crossing synchronizers
-  // --------------------------
-  
-  // // Reset synchronizer to clk_div domain
-  // reg [1:0] rst_sync;
-  // wire rst_internal;
-  
-  // always @(posedge clk_div or posedge iRst) begin
-  //   if (iRst || !iEn) begin
-  //     rst_sync <= 2'b11;
-  //   end else begin
-  //     rst_sync <= {rst_sync[0], 1'b0};
-  //   end
-  // end
-  // assign rst_internal = rst_sync[1] || !iEn;
-
-  // // Control signal synchronizers
-  // reg [1:0] calib_sync, read_sync;
-  // wire w_calib_internal, w_read_internal;
-  
-  // always @(posedge clk_div or posedge iRst) begin
-  //   if (iRst || !iEn) begin
-  //     calib_sync <= 2'b00;
-  //     read_sync <= 2'b00;
-  //   end else begin
-  //     calib_sync <= {calib_sync[0], iCalib & iEn};
-  //     read_sync <= {read_sync[0], iRead & iEn};
-  //   end
-  // end
-  
-  // assign w_calib_internal = calib_sync[1];
-  // assign w_read_internal = read_sync[1];
 
   // Edge detection for iRead
   reg r_read_prev;
@@ -126,7 +71,7 @@ module dual_trng(
   genvar i;
   generate
     for (i = 0; i < 24; i = i + 1) begin : gen_entropy_cells
-      entropy_cell_attribute ec (
+      entropy_cell ec (
         .T(iTrigger[i]),
         .I1(iI1[i]),
         .I2(iI2[i]),
