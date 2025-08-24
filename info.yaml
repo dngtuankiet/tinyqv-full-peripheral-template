@@ -24,6 +24,10 @@ project:
     - "test_harness/reclocking.sv"
     - "test_harness/spi_reg.sv"
     - "test_harness/synchronizer.sv"
+    - "user_peripherals/trng/dual_trng.v"
+    - "user_peripherals/trng/entropy_cell_attribute.v"
+    - "user_peripherals/trng/rg_base_long.v"
+    - "user_peripherals/trng/rg_base_short.v"
 
 
 # The pinout of your project. Leave unused pins blank. DO NOT delete or add any pins.
