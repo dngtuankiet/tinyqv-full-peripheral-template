@@ -32,7 +32,6 @@ module trng_kietdang (
 );
     // Implement a 32-bit read/write register at address 0
     reg [31:0] r_data_addr_0; // CONTROL REGISTER[3:0] -> READ[4] | CALIB[3] | SEL_BASE[2] | EN[1] | RST[0]
-    reg [31:0] r_data_addr_1; // STATUS REGISTER
     reg [31:0] r_data_addr_2; // CALIBRATION CYCLES REGISTER
     reg [31:0] r_data_addr_3; // I1 REGISTER
     reg [31:0] r_data_addr_4; // I2 REGISTER
