@@ -5,15 +5,36 @@
 SIM ?= icarus
 TOPLEVEL_LANG ?= verilog
 SRC_DIR = $(PWD)/../src
+
+# MODULE is the basename of the Python test file
+MODULE = test
+ifeq ($(MODULE),test)
 PROJECT_SOURCES = peripheral.v
+else ifeq ($(MODULE),test_upt)
+PROJECT_SOURCES = peripheral_upt.v
+endif
+
+# PROJECT_SOURCES = peripheral.v
 ADDITIONAL_SOURCES = tt_wrapper.v test_harness/*.sv
 
 ifneq ($(GATES),yes)
 
 # RTL simulation:
 SIM_BUILD				= sim_build/rtl
+
+# Add TRNG sources
+TRNG_SOURCES = user_peripherals/trng/dual_trng.v \
+			   user_peripherals/trng/entropy_cell.v \
+			   user_peripherals/trng/rg_base_long.v \
+			   user_peripherals/trng/rg_base_short.v
+
+UPT_SOURCES = user_peripherals/upt/upt.v \
+			  user_peripherals/upt/rg_base_extra_long.v 
+
 VERILOG_SOURCES += $(addprefix $(SRC_DIR)/,$(PROJECT_SOURCES))
 VERILOG_SOURCES += $(addprefix $(SRC_DIR)/,$(ADDITIONAL_SOURCES))
+VERILOG_SOURCES += $(addprefix $(SRC_DIR)/,$(TRNG_SOURCES))
+VERILOG_SOURCES += $(addprefix $(SRC_DIR)/,$(UPT_SOURCES))
 
 else
 
@@ -39,8 +60,7 @@ COMPILE_ARGS 		+= -I$(SRC_DIR)
 VERILOG_SOURCES += $(PWD)/tb.v
 TOPLEVEL = tb
 
-# MODULE is the basename of the Python test file
-MODULE = test
+
 
 # include cocotb's make rules to take care of the simulator setup
 include $(shell cocotb-config --makefiles)/Makefile.sim
